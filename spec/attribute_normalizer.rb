@@ -2,44 +2,44 @@ require File.dirname(__FILE__) + '/test_helper'
 require 'attribute_normalizer'
 
 describe AttributeNormalizer do
-  
+
   it 'should add the class method Class#normalize_attributes when included' do
-  
+
     klass = Class.new do
       include AttributeNormalizer
     end
-  
+
     klass.respond_to?(:normalize_attributes).should be_true
   end
-  
+
 end
 
 describe '#normalize_attributes without a block' do
-  
-  before do  
+
+  before do
 
     class Klass
       attr_accessor :attribute
       include AttributeNormalizer
       normalize_attributes :attribute
     end
-    
+
   end
 
   {
-    ' spaces in front and back ' => 'spaces in front and back', 
+    ' spaces in front and back ' => 'spaces in front and back',
     "\twe hate tabs!\t"          => 'we hate tabs!'
   }.each do |key, value|
     it "should normalize '#{key}' to '#{value}'" do
       Klass.send(:normalize_attribute, key).should == value
     end
   end
-  
+
 end
 
 describe '#normalize_attributes with a block' do
-  
-  before do  
+
+  before do
 
     class Klass
       attr_accessor :attribute
@@ -51,11 +51,11 @@ describe '#normalize_attributes with a block' do
         value
       end
     end
-    
+
   end
 
   {
-    "\tMichael Deering" => 'MICHAEL DEERING', 
+    "\tMichael Deering" => 'MICHAEL DEERING',
     2                   => 4,
     2.0                 => 1.0
   }.each do |key, value|
@@ -63,5 +63,76 @@ describe '#normalize_attributes with a block' do
       Klass.send(:normalize_attribute, key).should == value
     end
   end
-  
+
+end
+
+describe "#normalize_attributes on write" do
+
+  before do
+
+    class Klass
+      attr_accessor :height
+      include AttributeNormalizer
+      normalize_attributes :height, :on => :write do |value|
+        value * 12
+      end
+      def [](attr)
+        instance_variable_get "@#{attr}".to_sym
+      end
+      def []=(attr, value)
+        instance_variable_set "@#{attr}".to_sym, value
+      end
+      def raw_height=(value)
+        @height = value
+      end
+    end
+    @subject = Klass.new
+  end
+
+  it "should assign normalized value" do
+    @subject.height = 1
+    @subject.height.should == 12
+  end
+
+  it "should return unchanged value" do
+    @subject.raw_height = 12
+    @subject.height.should == 12
+  end
+
+end
+
+
+describe "#normalize_attributes on read" do
+
+  before do
+
+    class Klass
+      attr_accessor :height
+      include AttributeNormalizer
+      normalize_attributes :height, :on => :read do |value|
+        value * 12
+      end
+      def [](attr)
+        instance_variable_get "@#{attr}".to_sym
+      end
+      def []=(attr, value)
+        instance_variable_set "@#{attr}".to_sym, value
+      end
+      def raw_height
+        @height
+      end
+    end
+    @subject = Klass.new
+  end
+
+  it "should assign unchanged value" do
+    @subject.height = 1
+    @subject.raw_height.should == 1
+  end
+
+  it "should return normalized value" do
+    @subject.height = 1
+    @subject.height.should == 12
+  end
+
 end

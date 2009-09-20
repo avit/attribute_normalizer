@@ -7,6 +7,7 @@ module AttributeNormalizer
   module ClassMethods
 
     def normalize_attributes(*attributes, &block)
+      options = attributes.last.is_a?(::Hash) ? attributes.pop : {}
 
       attributes.each do |attribute|
 
@@ -20,20 +21,28 @@ module AttributeNormalizer
 
         klass.send :private, "normalize_#{attribute}"
 
-        src = <<-end_src
-          def #{attribute}
-            @#{attribute} ||= self.class.send(:normalize_#{attribute}, self[:#{attribute}]) unless self[:#{attribute}].nil?
-          end
+        src = ""
+        if options[:on] == :read || options.empty?
+          src += <<-end_src
+            def #{attribute}
+              @normalized_attributes ||= {}
+              @normalized_attributes[:#{attribute}] ||= self.class.send(:normalize_#{attribute}, self[:#{attribute}]) unless self[:#{attribute}].nil?
+            end
+          end_src
+        end
 
-          def #{attribute}=(#{attribute})
-            @#{attribute} = self[:#{attribute}] = self.class.send(:normalize_#{attribute}, #{attribute})
-          end
-        end_src
-
+        if options[:on] == :write || options.empty?
+          src += <<-end_src
+            def #{attribute}=(#{attribute})
+              @normalized_attributes ||= {}
+              @normalized_attributes[:#{attribute}] = self[:#{attribute}] = self.class.send(:normalize_#{attribute}, #{attribute})
+            end
+          end_src
+        end
         module_eval src, __FILE__, __LINE__
-        
+
       end
-      
+
     end
   end
 end
