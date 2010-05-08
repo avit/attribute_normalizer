@@ -4,7 +4,31 @@ p. I like to keep my Active Record models as strict as possible but I also like 
 
 h2. Install as a Ruby gem
 
-  TODO: gem-er-a-size this!
+p. The "attribute_normalizer gem":http://gemcutter.org/gems/attribute_normalizer is hosted over at "Gemcutter":http://gemcutter.org
+
+h3. Setup Gemcutter as a gem source if you have not already.
+
+p. It’s fairly simple to set up Gemcutter. Before we start, however, it’s worth making sure that we’ve upgraded to the latest version of RubyGems, which can be done by running
+
+<pre><code>sudo gem update --system</code></pre>
+
+p. From the command line. Once RubyGems has updated itself we can then install the Gemcutter gem with
+
+<pre><code>sudo gem install gemcutter</code></pre>
+
+p. After Gemcutter has installed we’ll need to update our gem sources to include gemcutter.org. To do this we run *gem tumble*.
+
+<pre><code>$ gem tumble
+Thanks for using Gemcutter!
+Your gem sources are now:
+- http://gemcutter.org
+- http://gems.rubyforge.org/
+- http://gems.github.com
+</code></pre>
+
+h3. Install the Attribute Normalizer gem
+
+<pre><code>sudo gem install attribute_normalizer</code></pre>
 
 h2. Install as a Ruby on Rails Plugin
 
@@ -23,7 +47,7 @@ or for all you hip gitsters.
 
 h2. Usage
 
-This is eager loaded into Active Record.
+This is eager loaded into Active Record.  It is usable inside of other ruby classes outside of ActiveRecord by just including the module AttributeNormalizer.
 
 <pre><code>
 class Klass < ActiveRecord::Base
@@ -32,8 +56,7 @@ class Klass < ActiveRecord::Base
   normalize_attributes :first_name, :last_name
 
   normalize_attributes :home_phone_number, :office_phone_number_ do |value|
-    return nil unless value.is_a?(String)
-    value.gsub(/\W/, '').gsub(/^1/, '')
+    value.is_a?(String) ? value.gsub(/\W/, '').gsub(/^1/, '') : nil
   end
 
 end
@@ -52,15 +75,10 @@ object.home_phone_number = '+1 (555) 123.4567'
 object.home_phone_number # => '5551234567'
 </code></pre>
 
-h3. Options
-
-By default, the normalization happens on both read and write operations. To change this, you can specify when the normalization should happen with the <code>:on</code> option:
-
-<pre><code>
-  normalize_attributes :home_phone_number,  :on => :write
-  normalize_attributes :compacted_field,    :on => :read
-</code></pre>
-
-h3. Credits
+h2. Credits
 
 Original module code and concept was taken from "Dan Kubb":http://github.com/dkubb during a project we worked on together.  I found that I was consistently using this across all my projects so I wanted to plugin-er-size and gem this up for easy reuse.
+
+h2. Copyright
+
+Copyright (c) 2009 "Michael Deering(Edmonton Ruby on Rails)":http://mdeering.com See MIT-LICENSE for details.

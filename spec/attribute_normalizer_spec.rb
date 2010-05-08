@@ -52,6 +52,8 @@ describe '#normalize_attributes with a block' do
       end
     end
 
+    @object = Klass.new
+
   end
 
   {
@@ -61,6 +63,40 @@ describe '#normalize_attributes with a block' do
   }.each do |key, value|
     it "should normalize '#{key}' to '#{value}'" do
       Klass.send(:normalize_attribute, key).should == value
+    end
+  end
+
+end
+
+describe 'with an instance' do
+
+  before do
+    User.class_eval do
+      normalize_attributes :name
+    end
+    @user = User.new
+  end
+
+  {
+    ' spaces in front and back ' => 'spaces in front and back',
+    "\twe hate tabs!\t"          => 'we hate tabs!'
+  }.each do |key, value|
+    it "should normalize '#{key}' to '#{value}'" do
+      @user.name = key
+      @user.name.should == value
+    end
+  end
+
+  context 'when another instance of the same saved record has been changed' do
+
+    before do
+      @user = User.create!(:name => 'Jimi Hendrix')
+      @user2 = User.find(@user.id)
+      @user2.update_attributes(:name => 'Thom Yorke')
+    end
+
+    it "should reflect the change when the record is reloaded" do
+      lambda { @user.reload }.should change(@user, :name).from('Jimi Hendrix').to('Thom Yorke')
     end
   end
 
@@ -101,7 +137,6 @@ describe "#normalize_attributes on write" do
 
 end
 
-
 describe "#normalize_attributes on read" do
 
   before do
@@ -133,6 +168,26 @@ describe "#normalize_attributes on read" do
   it "should return normalized value" do
     @subject.height = 1
     @subject.height.should == 12
+  end
+
+end
+
+describe 'normalize_attribute is aliased to normalize_attributes' do
+  before do
+    User.class_eval do
+      normalize_attribute :name
+    end
+    @user = User.new
+  end
+
+  {
+    ' spaces in front and back ' => 'spaces in front and back',
+    "\twe hate tabs!\t"          => 'we hate tabs!'
+  }.each do |key, value|
+    it "should normalize '#{key}' to '#{value}'" do
+      @user.name = key
+      @user.name.should == value
+    end
   end
 
 end

@@ -25,17 +25,16 @@ module AttributeNormalizer
         if options[:on] == :read || options.empty?
           src += <<-end_src
             def #{attribute}
-              @normalized_attributes ||= {}
-              @normalized_attributes[:#{attribute}] ||= self.class.send(:normalize_#{attribute}, self[:#{attribute}]) unless self[:#{attribute}].nil?
+              value = super
+              value.nil? ? value : self.class.send(:normalize_#{attribute}, value)
             end
           end_src
         end
 
         if options[:on] == :write || options.empty?
           src += <<-end_src
-            def #{attribute}=(#{attribute})
-              @normalized_attributes ||= {}
-              @normalized_attributes[:#{attribute}] = self[:#{attribute}] = self.class.send(:normalize_#{attribute}, #{attribute})
+            def #{attribute}=(value)
+              super(self.class.send(:normalize_#{attribute}, value))
             end
           end_src
         end
@@ -44,5 +43,10 @@ module AttributeNormalizer
       end
 
     end
+
+    alias :normalize_attribute :normalize_attributes
+
   end
 end
+
+ActiveRecord::Base.send(:include, AttributeNormalizer)
