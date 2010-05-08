@@ -102,6 +102,25 @@ describe 'with an instance' do
 
 end
 
+describe 'with a numeric column' do
+  before do
+    User.class_eval do
+      normalize_attributes :balance
+    end
+    @user = User.new
+  end
+  { 123.45 => 123.45,
+    '123.45' => 123.45,
+    '$123.45' => 123.45,
+    '123.45%' => 123.45
+  }.each do |key, value|
+    it "should normalize '#{key}' to '#{value}'" do
+      @user.balance = key
+      @user.balance.should == value
+    end
+  end
+end
+
 describe "#normalize_attributes on write" do
 
   before do

@@ -13,8 +13,20 @@ module AttributeNormalizer
 
         klass = class << self; self end
 
+        if self.respond_to?(:columns_hash)
+          attr_type = columns_hash[attribute.to_s].type
+          attr_type = :numeric if [:integer, :float, :decimal].include? attr_type
+        else
+          attr_type = nil
+        end
+
         klass.send :define_method, "normalize_#{attribute}" do |value|
-          value = value.strip if value.is_a?(String)
+          if value.is_a?(String)
+            value = value.strip
+            if attr_type
+              value.gsub!(/[^\d\.]/, '') if attr_type == :numeric
+            end
+          end
           normalized = block_given? && !value.blank? ? yield(value) : value
           normalized.blank? ? nil : normalized
         end
