@@ -8,6 +8,8 @@ ActiveRecord::Base.establish_connection({ :database => ":memory:", :adapter => '
 ActiveRecord::Schema.define do
   create_table :users, :force => true do |t|
     t.string :name
+    t.decimal :balance
+    t.integer :height
   end
 end
 

@@ -105,34 +105,25 @@ end
 describe "#normalize_attributes on write" do
 
   before do
-
-    class Klass
-      attr_accessor :height
-      include AttributeNormalizer
-      normalize_attributes :height, :on => :write do |value|
-        value * 12
+    class User
+      normalize_attributes :balance, :on => :write do |value|
+        0 - value.abs
       end
-      def [](attr)
-        instance_variable_get "@#{attr}".to_sym
-      end
-      def []=(attr, value)
-        instance_variable_set "@#{attr}".to_sym, value
-      end
-      def raw_height=(value)
-        @height = value
+      def raw_balance=(value)
+        write_attribute :balance, value
       end
     end
-    @subject = Klass.new
+    @subject = User.new
   end
 
   it "should assign normalized value" do
-    @subject.height = 1
-    @subject.height.should == 12
+    @subject.balance = 100.00
+    @subject.balance.should == -100.00
   end
 
   it "should return unchanged value" do
-    @subject.raw_height = 12
-    @subject.height.should == 12
+    @subject.raw_balance = -100.00
+    @subject.balance.should == -100.00
   end
 
 end
@@ -140,24 +131,15 @@ end
 describe "#normalize_attributes on read" do
 
   before do
-
-    class Klass
-      attr_accessor :height
-      include AttributeNormalizer
+    class User
       normalize_attributes :height, :on => :read do |value|
         value * 12
       end
-      def [](attr)
-        instance_variable_get "@#{attr}".to_sym
-      end
-      def []=(attr, value)
-        instance_variable_set "@#{attr}".to_sym, value
-      end
       def raw_height
-        @height
+        read_attribute :height
       end
     end
-    @subject = Klass.new
+    @subject = User.new
   end
 
   it "should assign unchanged value" do
